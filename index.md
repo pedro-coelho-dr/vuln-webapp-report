@@ -13,6 +13,8 @@ Professor: Henrique Arcoverde
 Recife – PE  
 19 de abril de 2025
 
+---
+
 ## Resumo
 
 ### Objetivo 
@@ -40,8 +42,6 @@ Foram identificadas 10 vulnerabilidades de segurança, classificadas conforme o 
 - Fraudes financeiras via manipulação de valores de pedidos  
 - Risco elevado de ataques automatizados e escalonamento de privilégios  
 
----
-
 ### Tabela Resumo das Vulnerabilidades
 
 | #  | Título                                                       | Endpoint(s)                                           | Parâmetro(s)                | Componente Afetado                              | Abrangência                   | OWASP         | CWE                                |
@@ -57,7 +57,6 @@ Foram identificadas 10 vulnerabilidades de segurança, classificadas conforme o 
 | 9  | Manipulação de preço via parâmetro client-side               | /order                                                | total_price                 | backend (processamento de pedidos)             | usuários autenticados         | A04:2021       | CWE-302                            |
 | 10 | Ausência de controles críticos de autenticação e recuperação de conta          | /login, /recover/reset, /edit-*                       | –                           | backend (autenticação e gestão de contas)      | todos os usuários             | A07:2021       | CWE-306, 307, 521, 640             |
 
----
 
 ### Distribuições Visuais
 
@@ -80,8 +79,6 @@ Foram identificadas 10 vulnerabilidades de segurança, classificadas conforme o 
 9. [Manipulação de preço via parâmetro client-side](#9-manipulação-de-preço-via-parâmetro-client-side)  
 10. [Ausência de controles críticos de autenticação e recuperação de conta](#10-ausência-de-controles-críticos-de-autenticação-e-recuperação-de-conta)
 
-
----
 
 ### 1. Exposição de diretórios sensíveis (Directory Listing)
 
@@ -136,9 +133,6 @@ A exposição de diretórios sensíveis permite que um atacante obtenha informa�
 - Validar acessos e permissões no backend, independentemente de restrições no frontend.
 
 
----
-
-
 ### 2. Enumeração de usuários na recuperação de senha
 
 #### Ponto Afetado
@@ -188,9 +182,6 @@ A possibilidade de distinguir entre usuários válidos e inválidos com base nas
 - Monitorar tentativas repetidas de recuperação de senha e gerar alertas em caso de atividade suspeita.
 
 
----
-
-
 ### 3. Reset de senha sem validação de identidade
 
 #### Ponto Afetado
@@ -235,9 +226,6 @@ Permitir a redefinição de senha sem autenticação ou vínculo com uma verific
 - Vincular a redefinição a um token temporário e exclusivo enviado por canal seguro.
 - Garantir que o endpoint de reset só possa ser acessado após a etapa de verificação.
 - Registrar e monitorar todas as ações relacionadas à recuperação de senha.
-
-
----
 
 ### 4. Tokens de sessão previsíveis (Time-based)
 
@@ -289,7 +277,6 @@ Tokens de sessão previsíveis podem ser gerados ou adivinhados por atacantes, p
 - Validar e expirar sessões antigas com frequência.
 
 
----
 
 ### 5. Session fixation
 
@@ -332,7 +319,6 @@ Ao não renovar o token de sessão após o login, a aplicação permite que um a
 - Adotar tokens com entropia suficiente e protegidos por boas práticas (ex: HttpOnly, Secure).
 
 
----
 ### 6. Session Hijacking
 
 #### Ponto Afetado
@@ -371,8 +357,6 @@ O uso irrestrito de tokens válidos sem verificação de origem ou expiração p
 - Adotar cookies com as flags `Secure`, `HttpOnly` e `SameSite=Strict`.
 
 
-
----
 ### 7. Enumeração de privilégios por endpoint exposto
 
 #### Ponto Afetado
@@ -419,7 +403,6 @@ Permitir a verificação direta de privilégios com respostas booleanas acessív
 - Monitorar e registrar tentativas de acesso não autorizado a verificações de privilégios.
 
 
----
 ### 8. IDOR – Modificação e exclusão de dados de terceiros
 
 #### Ponto Afetado
@@ -469,7 +452,6 @@ A ausência de validação de permissões permite que usuários alterem ou exclu
 - Utilizar identificadores derivados da sessão do usuário autenticado.
 - Adotar registros de auditoria para ações críticas e expor mensagens seguras ao usuário.
 
----
 ### 9. Manipulação de preço via parâmetro client-side
 
 #### Ponto Afetado
@@ -514,7 +496,6 @@ Permitir que o valor do pedido seja definido pelo cliente possibilita fraudes di
 - Validar todos os dados de entrada antes do processamento e gravação no banco de dados.
 
 
----
 ### 10. Ausência de controles críticos de autenticação e recuperação de conta
 
 #### Ponto Afetado
