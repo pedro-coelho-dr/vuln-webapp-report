@@ -1,42 +1,46 @@
-# Avaliação de Segurança da Aplicação CineViewExperience
+# Avaliação de Segurança 
+
+## CineViewExperience
+
+### Autor: Pedro Coelho  
 
 Cesar School  
 Ciência da Computação  
 Segurança Cibernética  
 
 Professor: Henrique Arcoverde  
-Aluno: Pedro Coelho  
 
 Recife – PE  
 19 de abril de 2025
 
-
 ## Resumo
 
-**Objetivo**  
+### Objetivo 
 Avaliar a segurança da aplicação CineViewExperience, com foco na identificação de vulnerabilidades práticas que possam ser exploradas por usuários autenticados e não autenticados.
 
-**Metodologia**  
+### Metodologia
 A análise foi realizada manualmente por meio da exploração direta da aplicação, combinando técnicas de mapeamento de superfície de ataque, manipulação de requisições, análise de fluxos e verificação de comportamentos inesperados em funcionalidades críticas.
 
-**Ferramentas**  
+### Ferramentas
 Firefox DevTools, Burp Suite Community, scripts Python, VS Code e ambiente Kali Linux.
 
-**Escopo**  
+### Escopo
 A avaliação foi conduzida em ambiente local com base nas instruções do repositório. Foram examinadas páginas públicas, fluxos de login e recuperação de conta, gerenciamento de pedidos e funcionalidades administrativas.
 
-**Período da Avaliação**  
+### Período da Avaliação
 - Início: 16/04/2025  
 - Término: 19/04/2025  
 
-**Vulnerabilidades Identificadas**  
+### Vulnerabilidades Identificadas
 Foram identificadas 10 vulnerabilidades de segurança, classificadas conforme o OWASP Top 10:2021 e suas respectivas CWE. As falhas abrangem desde exposição indevida de diretórios até falhas graves de autenticação e controle de acesso.
 
-**Principais Impactos**  
+### Principais Impactos
 - Comprometimento de contas privilegiadas e sequestro de sessões  
 - Exposição de lógica da aplicação e estrutura interna do backend  
 - Fraudes financeiras via manipulação de valores de pedidos  
 - Risco elevado de ataques automatizados e escalonamento de privilégios  
+
+---
 
 ### Tabela Resumo das Vulnerabilidades
 
@@ -53,11 +57,15 @@ Foram identificadas 10 vulnerabilidades de segurança, classificadas conforme o 
 | 9  | Manipulação de preço via parâmetro client-side               | /order                                                | total_price                 | backend (processamento de pedidos)             | usuários autenticados         | A04:2021       | CWE-302                            |
 | 10 | Ausência de controles críticos de autenticação e recuperação de conta          | /login, /recover/reset, /edit-*                       | –                           | backend (autenticação e gestão de contas)      | todos os usuários             | A07:2021       | CWE-306, 307, 521, 640             |
 
+---
+
 ### Distribuições Visuais
 
 ![Distribuição OWASP](img/graph-owasp.png)
 
 ![Distribuição por Abrangência](img/graph-abrangen.png)
+
+---
 
 ## Vulnerabilidades
 
