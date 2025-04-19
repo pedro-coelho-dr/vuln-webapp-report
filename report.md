@@ -1,19 +1,90 @@
+# Avaliação de Segurança da Aplicação CineViewExperience
+
+Cesar School  
+Ciência da Computação  
+Segurança Cibernética  
+
+Professor: Henrique Arcoverde  
+Aluno: Pedro Coelho  
+
+Recife – PE  
+19 de abril de 2025
 
 
-## Vulnerabilidades Encontradas
+## Resumo
+
+**Objetivo**  
+Avaliar a segurança da aplicação CineViewExperience, com foco na identificação de vulnerabilidades práticas que possam ser exploradas por usuários autenticados e não autenticados.
+
+**Metodologia**  
+A análise foi realizada manualmente por meio da exploração direta da aplicação, combinando técnicas de mapeamento de superfície de ataque, manipulação de requisições, análise de fluxos e verificação de comportamentos inesperados em funcionalidades críticas.
+
+**Ferramentas**  
+Firefox DevTools, Burp Suite Community, scripts Python, VS Code e ambiente Kali Linux.
+
+**Escopo**  
+A avaliação foi conduzida em ambiente local com base nas instruções do repositório. Foram examinadas páginas públicas, fluxos de login e recuperação de conta, gerenciamento de pedidos e funcionalidades administrativas.
+
+**Período da Avaliação**  
+- Início: 16/04/2025  
+- Término: 19/04/2025  
+
+**Vulnerabilidades Identificadas**  
+Foram identificadas 10 vulnerabilidades de segurança, classificadas conforme o OWASP Top 10:2021 e suas respectivas CWE. As falhas abrangem desde exposição indevida de diretórios até falhas graves de autenticação e controle de acesso.
+
+**Principais Impactos**  
+- Comprometimento de contas privilegiadas e sequestro de sessões  
+- Exposição de lógica da aplicação e estrutura interna do backend  
+- Fraudes financeiras via manipulação de valores de pedidos  
+- Risco elevado de ataques automatizados e escalonamento de privilégios  
+
+### Tabela Resumo das Vulnerabilidades
+
+| #  | Título                                                       | Endpoint(s)                                           | Parâmetro(s)                | Componente Afetado                              | Abrangência                   | OWASP         | CWE                                |
+|----|--------------------------------------------------------------|-------------------------------------------------------|-----------------------------|--------------------------------------------------|-------------------------------|----------------|-------------------------------------|
+| 1  | Exposição de diretórios sensíveis (Directory Listing)        | /js/, /assets/, /css/, /?debug=devtools               | –                           | servidor web (arquivos estáticos)              | aplicação client-side         | A05:2021       | CWE-548                            |
+| 2  | Enumeração de usuários na recuperação de senha               | /recover/verify                                       | username                    | backend (verificação de identidade)            | usuários não autenticados     | A07:2021       | CWE-204                            |
+| 3  | Reset de senha sem validação de identidade                   | /recover/reset                                        | username, password          | backend (fluxo de recuperação)                 | usuários não autenticados     | A07:2021       | CWE-640                            |
+| 4  | Tokens de sessão previsíveis (Time-based)                    | /login                                                | token (cookie)              | backend (geração de sessão)                    | todos os usuários             | A02:2021       | CWE-341                            |
+| 5  | Session fixation                                             | todas as rotas autenticadas                           | token (cookie)              | backend (controle de sessão)                   | usuários não autenticados     | A01:2021       | CWE-384                            |
+| 6  | Session hijacking                                            | todas as rotas autenticadas                           | token (cookie)              | backend (validação de sessão)                  | usuários autenticados         | A01:2021       | CWE-613                            |
+| 7  | Enumeração de privilégios por endpoint exposto               | /isAdmin                                              | token (cookie)              | backend (verificação de privilégios)           | usuários autenticados         | A01:2021       | CWE-203                            |
+| 8  | IDOR – Modificação e exclusão de dados de terceiros          | /edit-username, /edit-email, /edit-phone, /delete_user | id                         | backend (controle de recursos)                 | usuários autenticados         | A01:2021       | CWE-639                            |
+| 9  | Manipulação de preço via parâmetro client-side               | /order                                                | total_price                 | backend (processamento de pedidos)             | usuários autenticados         | A04:2021       | CWE-302                            |
+| 10 | Ausência de controles críticos de autenticação e recuperação de conta          | /login, /recover/reset, /edit-*                       | –                           | backend (autenticação e gestão de contas)      | todos os usuários             | A07:2021       | CWE-306, 307, 521, 640             |
+
+### Distribuições Visuais
+
+![Distribuição OWASP](img/graph-owasp.png)
+
+![Distribuição por Abrangência](img/graph-abrangen.png)
+
+## Vulnerabilidades
+
+1. [Exposição de diretórios sensíveis (Directory Listing)](#1-exposição-de-diretórios-sensíveis-directory-listing)  
+2. [Enumeração de usuários na recuperação de senha](#2-enumeração-de-usuários-na-recuperação-de-senha)  
+3. [Reset de senha sem validação de identidade](#3-reset-de-senha-sem-validação-de-identidade)  
+4. [Tokens de sessão previsíveis (Time-based)](#4-tokens-de-sessão-previsíveis-time-based)  
+5. [Session fixation](#5-session-fixation)  
+6. [Session hijacking](#6-session-hijacking)  
+7. [Enumeração de privilégios por endpoint exposto](#7-enumeração-de-privilégios-por-endpoint-exposto)  
+8. [IDOR – Modificação e exclusão de dados de terceiros](#8-idor--modificação-e-exclusão-de-dados-de-terceiros)  
+9. [Manipulação de preço via parâmetro client-side](#9-manipulação-de-preço-via-parâmetro-client-side)  
+10. [Ausência de controles críticos de autenticação e recuperação de conta](#10-ausência-de-controles-críticos-de-autenticação-e-recuperação-de-conta)
+
+
+---
 
 ### 1. Exposição de diretórios sensíveis (Directory Listing)
 
+
 #### Ponto Afetado
 
-- **URLs acessíveis publicamente:**
-  - `http://localhost:5500/js/`
-  - `http://localhost:5500/assets/`
-  - `http://localhost:5500/css/`
-  - `http://localhost:5500/?debug=devtools`
+- Endpoint(s): `/js/`, `/assets/`, `/css/`, `/?debug=devtools`
+- Parâmetro(s): –  
+- Componente afetado: servidor web (arquivos estáticos)
+- Abrangência: aplicação client-side
 
-- **Componente afetado:** Estrutura de arquivos do frontend (recursos estáticos)
-- **Abrangência:** Toda a aplicação client-side, incluindo scripts críticos e lógicas administrativas
 
 #### Descrição
 
@@ -31,8 +102,8 @@ O endpoint `/devtools/` revelou a estrutura interna do backend, incluindo nomes 
 
 #### Classificação
 
-- **OWASP:** A05:2021 – Security Misconfiguration  
-- **CWE:** CWE-548 – Information Exposure Through Directory Listing  
+- OWASP Top 10: [A05:2021 – Security Misconfiguration](https://owasp.org/Top10/A05_2021-Security_Misconfiguration/) 
+- CWE: [CWE-548 – Information Exposure Through Directory Listing](https://cwe.mitre.org/data/definitions/548.html)
 
 #### Evidências
 
@@ -46,20 +117,16 @@ O endpoint `/devtools/` revelou a estrutura interna do backend, incluindo nomes 
 
 #### Impacto
 
-Essa vulnerabilidade expõe partes sensíveis da lógica da aplicação, facilitando ataques mais precisos e rápidos, como:
-
-- Identificação de rotas e painéis ocultos (ex: `/dashboard.html`, `/admin/orders`, `/admin/stats`)
-- Enumeração de funcionalidades administrativas mesmo sem acesso prévio
-- Conhecimento da estrutura do backend e nomes de arquivos sensíveis
-- Apoio direto a ataques como IDOR, hijacking de sessão, escalonamento de privilégios e bypass de autenticação.
+A exposição de diretórios sensíveis permite que um atacante obtenha informações internas sobre a estrutura da aplicação, scripts utilizados e funcionalidades disponíveis. Isso pode facilitar ataques futuros como escalonamento de privilégios, bypass de autenticação, identificação de endpoints administrativos e exploração de falhas lógicas ou de acesso.
 
 #### Recomendações
 
-- Desabilitar o listamento de diretórios no servidor web.
-- Remover arquivos de depuração, como `devtools`, antes da publicação em ambiente de produção.
-- Restringir o acesso a diretórios sensíveis apenas a usuários autenticados ou via controle de permissões.
-- Considerar o uso de builds minificados/ofuscados para arquivos JavaScript em produção.
-- Validar todas as permissões no lado servidor, independentemente de proteções visuais no frontend.
+- Desabilitar o recurso de listagem de diretórios no servidor web.
+- Remover diretórios e arquivos de depuração antes da publicação em ambiente de produção.
+- Restringir o acesso a diretórios internos com autenticação ou regras específicas no servidor.
+- Utilizar builds minificados e ofuscados para scripts JavaScript em produção.
+- Validar acessos e permissões no backend, independentemente de restrições no frontend.
+
 
 ---
 
@@ -68,12 +135,11 @@ Essa vulnerabilidade expõe partes sensíveis da lógica da aplicação, facilit
 
 #### Ponto Afetado
 
-- **URL principal de interação:** http://localhost:8000/recover/verify  
-- **Parâmetro vulnerável:** Campo `username` submetido via formulário de recuperação de senha  
-- **Componente afetado:** Lógica de resposta do backend na verificação de dados  
-- **Abrangência:** Funcionalidade de recuperação de senha (afeta todo o sistema de autenticação)
+- Endpoint(s): `/recover/verify`
+- Parâmetro(s): `username`
+- Componente afetado: backend (verificação de identidade)
+- Abrangência: usuários não autenticados
 
-#### Descrição
 
 #### Descrição
 
@@ -89,8 +155,8 @@ Esse comportamento permite que um atacante utilize o endpoint como um oráculo d
 
 #### Classificação
 
-- OWASP: A07:2021 – Identification and Authentication Failures  
-- CWE: CWE-204 – Observable Response Discrepancy  
+- OWASP Top 10: [A07:2021 – Identification and Authentication Failures](https://owasp.org/Top10/A07_2021-Identification_and_Authentication_Failures/)  
+- CWE: [CWE-204 – Observable Response Discrepancy](https://cwe.mitre.org/data/definitions/204.html) 
 
 #### Evidências
 
@@ -104,14 +170,14 @@ Esse comportamento permite que um atacante utilize o endpoint como um oráculo d
 
 #### Impacto
 
-Essa vulnerabilidade permite que um atacante obtenha uma lista parcial ou completa de usuários válidos no sistema, facilitando ataques subsequentes como brute-force, reset de senha direcionado ou spear-phishing. Quando combinado com falhas de autenticação, o impacto é ainda mais severo.
+A possibilidade de distinguir entre usuários válidos e inválidos com base nas mensagens de erro permite que um atacante realize ataques de enumeração. Isso pode levar à obtenção de uma lista de usuários cadastrados na aplicação, facilitando ataques futuros como força bruta, phishing direcionado e exploração de falhas de autenticação.
 
 #### Recomendações
 
-- Padronizar as mensagens de erro de forma neutra e genérica.  
-- Evitar expor explicitamente se o nome de usuário é válido ou não.  
-- Implementar proteção contra automação (ex: rate limiting ou CAPTCHA).  
-- Monitorar tentativas de recuperação suspeitas e notificar os usuários em caso de abusos.
+- Padronizar as mensagens de erro para não indicar se o usuário informado é válido ou não.
+- Evitar qualquer feedback explícito sobre a existência de contas no sistema.
+- Implementar mecanismos de proteção contra automação, como CAPTCHA e rate limiting.
+- Monitorar tentativas repetidas de recuperação de senha e gerar alertas em caso de atividade suspeita.
 
 
 ---
@@ -121,10 +187,11 @@ Essa vulnerabilidade permite que um atacante obtenha uma lista parcial ou comple
 
 #### Ponto Afetado
 
-- **URL principal de interação:** http://localhost:8000/recover/reset  
-- **Parâmetros vulneráveis:** `username` e `password` (fornecidos no corpo da requisição)  
-- **Componente afetado:** Fluxo de recuperação de senha  
-- **Abrangência:** Endpoint crítico exposto sem validação adequada da identidade do usuário
+- Endpoint(s): `/recover/reset`
+- Parâmetro(s): `username`, `password`
+- Componente afetado: backend (fluxo de recuperação)
+- Abrangência: usuários não autenticados
+
 
 #### Descrição
 
@@ -137,8 +204,8 @@ A ausência de validação entre as etapas do fluxo torna o mecanismo de recuper
 
 #### Classificação
 
-- OWASP: A07:2021 – Identification and Authentication Failures  
-- CWE: CWE-640 – Weak Password Recovery Mechanism for Forgotten Password 
+- OWASP Top 10: [A07:2021 – Identification and Authentication Failures](https://owasp.org/Top10/A07_2021-Identification_and_Authentication_Failures/)
+- CWE: [CWE-640 – Weak Password Recovery Mechanism for Forgotten Password](https://cwe.mitre.org/data/definitions/640.html)
 
 #### Evidências
 
@@ -152,16 +219,14 @@ A ausência de validação entre as etapas do fluxo torna o mecanismo de recuper
 
 #### Impacto
 
-Um atacante que consiga prever ou identificar nomes de usuários válidos pode redefinir suas senhas e assumir suas contas, incluindo contas privilegiadas. Isso compromete a integridade e confidencialidade de toda a aplicação, permitindo acesso irrestrito a dados, funcionalidades e possivelmente o controle administrativo da plataforma.
+Permitir a redefinição de senha sem autenticação ou vínculo com uma verificação anterior expõe a aplicação a ataques que resultam na tomada de contas de usuários legítimos. Um atacante pode assumir o controle de contas, inclusive administrativas, comprometendo a confidencialidade, integridade e disponibilidade do sistema.
 
 #### Recomendações
 
-- Associar o processo de recuperação de senha a uma sessão segura temporária vinculada ao usuário verificado.  
-- Evitar que a API de reset aceite solicitações diretas sem verificação de identidade.  
-- Implementar tokens únicos de recuperação de senha com expiração curta, enviados via canal seguro.
-- Incluir registros de auditoria e alertas para qualquer tentativa de recuperação de senha.
-
-
+- Exigir uma etapa prévia de verificação de identidade antes de permitir a redefinição de senha.
+- Vincular a redefinição a um token temporário e exclusivo enviado por canal seguro.
+- Garantir que o endpoint de reset só possa ser acessado após a etapa de verificação.
+- Registrar e monitorar todas as ações relacionadas à recuperação de senha.
 
 
 ---
@@ -170,10 +235,10 @@ Um atacante que consiga prever ou identificar nomes de usuários válidos pode r
 
 #### Ponto Afetado
 
-- **URL principal de interação:** http://localhost:8000/login  
-- **Parâmetro vulnerável:** Cookie `token` (utilizado na autenticação de sessão)  
-- **Componente afetado:** Mecanismo de geração e validação de sessão  
-- **Abrangência:** Comportamento sistêmico (todos os tokens gerados compartilham o mesmo padrão frágil)
+- Endpoint(s): `/login`
+- Parâmetro(s): `token` (cookie)
+- Componente afetado: backend (geração de sessão)
+- Abrangência: todos os usuários
 
 
 #### Descrição
@@ -187,9 +252,8 @@ Além disso, foi observado que a aplicação gera um token já no primeiro acess
 
 #### Classificação
 
-- OWASP: A2:2021 – Broken Authentication
-
-- CWE: CWE-341 – Predictable Pseudo-Random Number Generator
+- OWASP Top 10: [A02:2021 – Cryptographic Failures](https://owasp.org/Top10/A02_2021-Cryptographic_Failures/)
+- CWE: [CWE-341 – Predictable Pseudo-Random Number Generator](https://cwe.mitre.org/data/definitions/341.html)
 
 
 #### Evidências
@@ -206,73 +270,109 @@ Além disso, foi observado que a aplicação gera um token já no primeiro acess
 
 
 #### Impacto
-Essa vulnerabilidade permite que um atacante consiga prever tokens de usuários que realizaram login recentemente, permitindo o acesso não autorizado a sessões ativas. Dependendo do perfil acessado, isso pode comprometer totalmente a aplicação e os dados dos usuários, incluindo contas administrativas.
+
+Tokens de sessão previsíveis podem ser gerados ou adivinhados por atacantes, permitindo o sequestro de sessões de usuários legítimos. Isso compromete a confidencialidade e o controle de acesso, podendo resultar em acessos não autorizados, manipulação de dados e comprometimento de contas privilegiadas.
 
 #### Recomendações
 
-- Substituir o mecanismo de geração de tokens por um gerador criptograficamente seguro.
-- Evitar qualquer mecanismo baseado apenas em timestamps.
-
+- Utilizar um gerador criptograficamente seguro para tokens de sessão.
+- Evitar o uso de dados previsíveis, como timestamps, na composição dos tokens.
+- Regenerar o token de sessão após autenticação bem-sucedida.
+- Validar e expirar sessões antigas com frequência.
 
 
 ---
 
-### 5. Sequestro de sessão e session fixation
+### 5. Session fixation
+
 
 #### Ponto Afetado
 
-- **URLs afetadas:** Todas as rotas autenticadas (ex: `/movies`, `/admin/stats`, etc.)  
-- **Parâmetro vulnerável:** Cookie `token`  
-- **Componente afetado:** Validação da sessão no backend  
-- **Abrangência:** Comportamento sistêmico (qualquer token válido pode ser reutilizado sem contexto adicional)
-
-
+- Endpoint(s): todas as rotas autenticadas
+- Parâmetro(s): `token` (cookie)
+- Componente afetado: backend (controle de sessão)
+- Abrangência: usuários não autenticados
+  
 #### Descrição
 
-A aplicação aceita qualquer token válido como meio de autenticação, sem verificar sua origem, contexto ou validade temporal. Isso permite sequestro de sessão (session hijacking) com a simples reutilização de um token previamente emitido.
+A aplicação cria um token de sessão antes da autenticação, o qual permanece ativo mesmo após o login do usuário. Esse comportamento permite que um atacante defina previamente um valor de token conhecido e, ao induzir um usuário a autenticar-se com esse token já setado, tenha controle sobre a sessão resultante.
 
-Não há proteção contra reutilização do token em navegadores ou dispositivos diferentes, nem vínculo com informações da sessão original (como IP ou user-agent).
-
-Além disso, o token gerado no primeiro acesso — antes mesmo do login — continua ativo após a autenticação, sem rotação. Esse comportamento caracteriza um cenário clássico de session fixation.
-
-Durante os testes, foi possível reutilizar um token válido (`1745015987`) em uma nova aba anônima e obter acesso direto ao painel administrativo.
-
+Esse cenário caracteriza uma session fixation, em que o atacante prepara o ambiente antes da autenticação do alvo.
 
 #### Classificação
 
-- OWASP: A01:2021 – Broken Access Control  
-- CWE: CWE-384 – Session Fixation  
+- OWASP Top 10: [A01:2021 – Broken Access Control](https://owasp.org/Top10/A01_2021-Broken_Access_Control/)
+- CWE: [CWE-384 – Session Fixation](https://cwe.mitre.org/data/definitions/384.html)
 
 #### Evidências
 
-- Cookie com token `1745015987` reutilizado com sucesso fora da sessão original:
+- Cookie de valor fixado (`1`) foi injetado no navegador antes do login:
+  
+  ![](img/session-fixations.png)
 
-    ![](img/session-hijacking-dashboard-dev.png)
+- Após a autenticação, o token permanece válido e garante acesso ao painel administrativo sem rotação ou renovação.
 
 #### Impacto
 
-Um atacante que obtenha qualquer token de sessão válido poderá assumir completamente a identidade do usuário, sem a necessidade de conhecer as credenciais. Isso pode incluir usuários privilegiados como administradores, expondo dados sensíveis e funções críticas.
+Ao não renovar o token de sessão após o login, a aplicação permite que um atacante associe um token previamente conhecido a um usuário autenticado. Isso possibilita o controle total da sessão do usuário, comprometendo a confidencialidade e a integridade da conta.
 
 #### Recomendações
 
-- Utilizar identificadores de sessão aleatórios com entropia suficiente (UUID, `secrets.token_urlsafe` etc).  
-- Associar sessões a fingerprints de cliente (ex: IP, User-Agent).  
-- Implementar expiração e rotação periódica de tokens.  
-- Adicionar suporte a logout remoto e invalidação imediata do token após logout.  
-- Sinalizar cookies com `HttpOnly`, `Secure` (em HTTPS) e `SameSite=Strict`.
+- Gerar um novo token de sessão após o login bem-sucedido.
+- Invalidar qualquer token anterior à autenticação.
+- Impedir que sessões iniciadas antes do login sejam promovidas a sessões autenticadas.
+- Adotar tokens com entropia suficiente e protegidos por boas práticas (ex: HttpOnly, Secure).
 
+
+---
+### 6. Session Hijacking
+
+#### Ponto Afetado
+
+- Endpoint(s): todas as rotas autenticadas
+- Parâmetro(s): `token` (cookie)
+- Componente afetado: backend (validação de sessão)
+- Abrangência: usuários autenticados
+
+#### Descrição
+
+Após a autenticação, a aplicação aceita qualquer token válido sem verificação de origem, contexto ou expiração. Durante os testes, foi possível reutilizar tokens autenticados em outras sessões e navegadores, sem qualquer associação com fingerprint de dispositivo, IP ou user-agent.
+
+Esse comportamento representa uma vulnerabilidade de sequestro de sessão, permitindo que um token válido capturado seja reutilizado por um atacante.
+
+#### Classificação
+
+- OWASP Top 10: [A01:2021 – Broken Access Control](https://owasp.org/Top10/A01_2021-Broken_Access_Control/)
+- CWE: [CWE-613 – Insufficient Session Expiration](https://cwe.mitre.org/data/definitions/613.html)
+
+#### Evidências
+
+- Token `1745015987` reutilizado com sucesso em nova aba anônima, com acesso direto ao painel administrativo:
+
+  ![](img/session-hijacking-dashboard-dev.png)
+
+#### Impacto
+
+O uso irrestrito de tokens válidos sem verificação de origem ou expiração permite que atacantes reutilizem sessões legítimas. Isso possibilita acesso não autorizado a contas, manipulação de dados sensíveis, e comprometimento de funcionalidades administrativas ou privadas.
+
+#### Recomendações
+
+- Associar a sessão a informações do cliente, como IP e user-agent.
+- Rotacionar tokens de sessão em eventos críticos, como login.
+- Expirar tokens automaticamente após período de inatividade.
+- Adotar cookies com as flags `Secure`, `HttpOnly` e `SameSite=Strict`.
 
 
 
 ---
-### 6. Enumeração de privilégios via `/isAdmin`
+### 7. Enumeração de privilégios por endpoint exposto
 
 #### Ponto Afetado
 
-- **URL de interação:** `http://localhost:8000/isAdmin`  
-- **Parâmetro vulnerável:** Cookie `token` (identificador de sessão)  
-- **Componente afetado:** Lógica de verificação de privilégios administrativos  
-- **Abrangência:** Toda a aplicação, com especial foco na enumeração de contas privilegiadas
+- Endpoint(s): `/isAdmin`
+- Parâmetro(s): `token` (cookie)
+- Componente afetado: backend (verificação de privilégios)	
+- Abrangência: usuários autenticados
 
 
 #### Descrição
@@ -286,8 +386,8 @@ A exposição dessa informação representa uma forma de disclosure de privilég
 
 #### Classificação
 
-- OWASP: A01:2021 – Broken Access Control  
-- CWE: CWE-200 – Exposure of Sensitive Information to an Unauthorized Actor  
+- OWASP Top 10: [A01:2021 – Broken Access Control](https://owasp.org/Top10/A01_2021-Broken_Access_Control/)
+- CWE: [CWE-203 – Observable Discrepancy](https://cwe.mitre.org/data/definitions/203.html)
 
 #### Evidências
 
@@ -302,33 +402,24 @@ A exposição dessa informação representa uma forma de disclosure de privilég
 
 #### Impacto
 
-Permite que um atacante identifique quais tokens estão associados a contas administrativas, mesmo sem realizar login ou obter outras credenciais. Isso facilita ataques dirigidos de session hijacking, privilege escalation e uso de endpoints sensíveis da aplicação com privilégios elevados.
+Permitir a verificação direta de privilégios com respostas booleanas acessíveis a qualquer usuário facilita a identificação de contas administrativas. Isso contribui para ataques direcionados, como hijacking e escalonamento de privilégios.
 
 #### Recomendações
 
-- Restringir o endpoint `/isAdmin` apenas para usuários autenticados que precisem dessa informação no contexto de suas ações (idealmente apenas no backend).
-- Retornar mensagens genéricas (ou HTTP 403) para usuários não autorizados, em vez de `true/false`.
-- Realizar verificação de privilégios exclusivamente no backend, e não expor a lógica ao frontend de forma direta.
-- Monitorar acessos frequentes ou suspeitos ao endpoint `/isAdmin`.
-
+- Restringir o acesso ao endpoint a funções que realmente demandem a informação, idealmente no backend.
+- Evitar retornos explícitos como `true/false`; utilizar respostas genéricas ou códigos de status HTTP apropriados.
+- Monitorar e registrar tentativas de acesso não autorizado a verificações de privilégios.
 
 
 ---
-### 7. IDOR – Modificação e exclusão de dados de terceiros
+### 8. IDOR – Modificação e exclusão de dados de terceiros
 
 #### Ponto Afetado
 
-- **URLs principais de interação:**
-  - `http://localhost:8000/edit-username`
-  - `http://localhost:8000/edit-email`
-  - `http://localhost:8000/edit-phone`
-  - `http://localhost:8000/delete_user`
-
-- **Parâmetro vulnerável:** Campo `id` enviado no corpo da requisição
-
-- **Componente afetado:** Endpoints de manipulação de dados sensíveis de usuários
-
-- **Abrangência:** Qualquer usuário autenticado pode modificar ou excluir dados de qualquer outro usuário, conhecendo seu ID
+- Endpoint(s): `/edit-username`, `/edit-email`, `/edit-phone`, `/delete_user`
+- Parâmetro(s): `id`
+- Componente afetado: backend (controle de recursos)
+- Abrangência: usuários autenticados
 
 
 #### Descrição
@@ -345,8 +436,8 @@ O endpoint de exclusão não realiza nenhuma checagem de autorização, permitin
 
 #### Classificação
 
-- **OWASP:** A01:2021 – Broken Access Control  
-- **CWE:** CWE-639 – Authorization Bypass Through User-Controlled Key  
+- OWASP Top 10: [A01:2021 – Broken Access Control](https://owasp.org/Top10/A01_2021-Broken_Access_Control/)
+- CWE: [CWE-639 – Authorization Bypass Through User-Controlled Key](https://cwe.mitre.org/data/definitions/639.html)
 
 #### Evidências
 
@@ -361,34 +452,25 @@ O endpoint de exclusão não realiza nenhuma checagem de autorização, permitin
 
 #### Impacto
 
-Essas vulnerabilidades permitem que qualquer usuário autenticado:
-
-- **Altere dados de outras contas**
-- **Apague contas inteiras**, inclusive administrativas
-- **Obstrua o funcionamento normal da aplicação**
-- **Facilite ataques futuros**, como redefinições de senha ou negação de serviço
+A ausência de validação de permissões permite que usuários alterem ou excluam dados de outras contas, incluindo contas administrativas. Isso compromete a integridade dos dados, afeta o funcionamento da aplicação e pode facilitar ataques futuros.
 
 #### Recomendações
 
-- Implementar checagens rígidas de autorização no backend: somente **o próprio usuário ou um administrador** devem poder modificar/excluir contas.
-- Remover o parâmetro `id` das requisições e utilizar o identificador da **sessão autenticada**.
-- Adicionar **logs de auditoria** para rastrear ações sensíveis como exclusão de usuários.
-- Retornar **erros claros e seguros** em caso de tentativa de ação não autorizada.
-
-
-
+- Validar no backend se o usuário autenticado tem permissão para modificar ou excluir o recurso.
+- Evitar uso de parâmetros controlados pelo cliente para identificar recursos sensíveis.
+- Utilizar identificadores derivados da sessão do usuário autenticado.
+- Adotar registros de auditoria para ações críticas e expor mensagens seguras ao usuário.
 
 ---
-### 8. Manipulação de preço via parâmetro client-side
+### 9. Manipulação de preço via parâmetro client-side
 
 #### Ponto Afetado
 
-- **URL principal de interação:** `http://localhost:8000/order`  
-- **Parâmetro vulnerável:** `total_price` (enviado no corpo da requisição POST)  
-- **Componente afetado:** Backend de criação de pedidos  
-- **Abrangência:** Toda a lógica de pedidos e faturamento da aplicação
+- Endpoint(s): `/order`
+- Parâmetro(s): `total_price`
+- Componente afetado: backend (processamento de pedidos)
+- Abrangência: usuários autenticados
 
-#### Descrição
 
 #### Descrição
 
@@ -401,8 +483,8 @@ Essa lógica transfere uma etapa crítica de negócio para o lado do cliente, pe
 
 #### Classificação
 
-- OWASP: A04:2021 – Insecure Design  
-- CWE: CWE-345 – Insufficient Verification of Data Authenticity  
+- OWASP Top 10: [A04:2021 – Insecure Design](https://owasp.org/Top10/A04_2021-Insecure_Design/)
+- CWE: [CWE-302 – Authentication Bypass by Assumed-Immutable Data](https://cwe.mitre.org/data/definitions/302.html)
 
 
 #### Evidências
@@ -415,25 +497,24 @@ Essa lógica transfere uma etapa crítica de negócio para o lado do cliente, pe
 
 #### Impacto
 
-Um atacante pode realizar pedidos gratuitos ou com valores artificiais, comprometendo a confiabilidade do sistema de cobrança, os registros administrativos e a integridade financeira da aplicação.
-
-Essa falha permite fraudes silenciosas, manipulação e perdas financeiras.
+Permitir que o valor do pedido seja definido pelo cliente possibilita fraudes diretas, como compras gratuitas ou com valores manipulados. Isso afeta a integridade financeira da aplicação e pode resultar em prejuízos comerciais.
 
 #### Recomendações
 
-- Ignorar qualquer valor enviado pelo cliente para o campo `total_price`.  
-- Calcular o preço exclusivamente no backend com base em regras internas.  
-- Validar consistência dos dados antes de gravar no banco.  
-
+- Calcular o valor total do pedido exclusivamente no backend com base nos itens e regras da plataforma.
+- Ignorar valores de preço recebidos do cliente.
+- Validar todos os dados de entrada antes do processamento e gravação no banco de dados.
 
 
 ---
-### 9. Ausência de MFA, brute-force protection e auditoria
+### 10. Ausência de controles críticos de autenticação e recuperação de conta
 
 #### Ponto Afetado
 
-- **Componentes afetados:** Autenticação (`/login`), redefinição de senha (`/recover/reset`), alteração de dados pessoais (`/edit-*`)  
-- **Abrangência:** Toda a aplicação, afetando os fluxos de autenticação, recuperação e alteração de informações
+- Endpoint(s): `/login`, `/recover/reset`, `/edit-*`
+- Parâmetro(s): –
+- Componente afetado: backend (autenticação e gestão de contas)
+- Abrangência: todos os usuários
 
 
 #### Descrição
@@ -453,12 +534,15 @@ Foram observadas as seguintes falhas:
 
 #### Classificação
 
-- OWASP: A07:2021 – Identification and Authentication Failures  
-- CWE:  
-  - CWE-307 – Improper Restriction of Excessive Authentication Attempts  
-  - CWE-521 – Weak Password Requirements  
-  - CWE-306 – Missing Authentication for Critical Function
-  - CWE-640 – Weak Password Recovery Mechanism for Forgotten Password
+- OWASP Top 10: [A07:2021 – Identification and Authentication Failures](https://owasp.org/Top10/A07_2021-Identification_and_Authentication_Failures/)
+- CWE:
+  - [CWE-306 – Missing Authentication for Critical Function](https://cwe.mitre.org/data/definitions/306.html)
+  - [CWE-307 – Improper Restriction of Excessive Authentication Attempts](https://cwe.mitre.org/data/definitions/307.html)
+  - [CWE-521 – Weak Password Requirements](https://cwe.mitre.org/data/definitions/521.html)
+  - [CWE-640 – Weak Password Recovery Mechanism for Forgotten Password](https://cwe.mitre.org/data/definitions/640.html)
+
+  *Esta seção consolida múltiplas falhas complementares dentro do fluxo de autenticação e gerenciamento de contas. Todas contribuem conjuntamente para o risco identificado.*
+
 
 #### Evidências
 
@@ -468,15 +552,12 @@ Foram observadas as seguintes falhas:
 
 #### Impacto
 
-A falta desses mecanismos compromete tanto a **confidencialidade** quanto a **integridade** das contas dos usuários. Isso facilita:
-
-- Ataques automatizados de brute-force;
-- Uso indevido de sessões ativas por terceiros;
-- Ataques de engenharia social com base em alterações silenciosas de dados.
+A falta de controles adequados nos fluxos de autenticação e recuperação de contas facilita ataques como brute-force, hijacking e engenharia social. Isso compromete diretamente a confidencialidade e integridade das contas de usuários e administradores.
 
 #### Recomendações
 
-- Implementar rate limiting** e bloqueios temporários após número excessivo de tentativas de login;
-- Adicionar autenticação multifator (por e-mail, TOTP ou SMS);
-- Enviar notificações por e-mail e/ou registrar auditoria para ações críticas;
-- Aplicar política de senha forte, incluindo mínimo de caracteres e complexidade.
+- Implementar limitação de tentativas e bloqueios temporários em casos de falha repetida no login.
+- Adotar autenticação multifator, especialmente para contas privilegiadas.
+- Enviar notificações de eventos críticos (logins, mudanças de senha ou dados).
+- Substituir perguntas de segurança por métodos mais robustos de verificação, como tokens de recuperação temporários.
+- Aplicar política de senha forte com validação de complexidade e tamanho.
