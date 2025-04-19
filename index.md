@@ -1,8 +1,8 @@
 # Avaliação de Segurança 
 
-## CineViewExperience
+### CineViewExperience
 
-### Autor: Pedro Coelho  
+#### por Pedro Coelho  
 
 Cesar School  
 Ciência da Computação  
@@ -12,8 +12,6 @@ Professor: Henrique Arcoverde
 
 Recife – PE  
 19 de abril de 2025
-
----
 
 ## Resumo
 
@@ -64,7 +62,6 @@ Foram identificadas 10 vulnerabilidades de segurança, classificadas conforme o 
 
 ![Distribuição por Abrangência](img/graph-abrangen.png)
 
----
 
 ## Vulnerabilidades
 
@@ -256,7 +253,7 @@ Além disso, foi observado que a aplicação gera um token já no primeiro acess
 
 - Script em Python para geração de tokens válidos:  
   
-    [script.py](script.py)
+    [token_brute.py](scripts/token_brute.py)
 
 
 - Múltiplos tokens válidos identificados com sucesso:
@@ -390,6 +387,10 @@ A exposição dessa informação representa uma forma de disclosure de privilég
 - **Script de automação usado para filtrar tokens com privilégios administrativos:**
 
   ![](img/admin-enum-script.png)
+
+- Script em Python para geração de tokens válidos:  
+  
+    [token_admin_enum.py](scripts/token_admin_enum.py)
 
 
 #### Impacto
